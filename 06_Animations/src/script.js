@@ -29,3 +29,37 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.render(scene, camera)
+
+// Animation
+// let time = Date.now();
+const clock = new THREE.Clock()
+
+
+const ticks = () => {
+
+    // Using Date Function
+
+    // const currentTime = Date.now();
+    // const delatTime = currentTime - time;
+    // time = currentTime;
+
+    // mesh.rotation.y += 0.01 * delatTime
+
+    // Using Three.js Clock
+
+    const elapsedTime = clock.getElapsedTime();
+
+    // mesh.rotation.y = elapsedTime * Math.PI * 2; // To Rotate Cube fully every second
+    // mesh.position.x = Math.sin(elapsedTime);
+    // mesh.position.y = Math.cos(elapsedTime);
+
+    camera.position.x = Math.sin(elapsedTime);
+    camera.position.y = Math.cos(elapsedTime);
+    camera.lookAt(mesh.position)
+
+    renderer.render(scene, camera)
+
+    window.requestAnimationFrame(ticks)
+}
+
+ticks()
