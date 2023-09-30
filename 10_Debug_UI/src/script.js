@@ -1,6 +1,19 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import gsap from 'gsap'
+import * as lil from "lil-gui";
+import * as dat from "dat.gui";
+
+// Debug UI
+const gui = new lil.GUI()
+// const guii = new dat.GUI()
+
+const parameters = {
+    color: 0xff0000,
+    spin: () => {
+        gsap.to(mesh.rotation, {duration: 1, y: mesh.rotation.y + Math.PI * 2})
+    }
+}
 
 /**
  * Base
@@ -19,6 +32,35 @@ const material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
 const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
 
+// Debug UI Parameters
+// gui.add(mesh.position, "y", -3, 3, 0.01)
+gui
+    .add(mesh.position, "y")
+    .min(-3)
+    .max(3)
+    .step(0.01)
+    .name("Elevation")
+
+gui
+    .add(mesh, "visible")
+
+gui
+    .add(material, "wireframe")
+
+// Hard way to change color of geometry
+// gui
+//     .addColor(parameters, "color")
+//     .onChange(() => {
+//         material.color.set(parameters.color)
+//     })
+
+// Easy way to change color of geometry
+gui 
+    .addColor(material, "color")
+
+gui
+    .add(parameters, "spin")
+
 /**
  * Sizes
  */
@@ -27,8 +69,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -68,8 +109,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
 
     // Update controls
