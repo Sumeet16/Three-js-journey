@@ -16,6 +16,11 @@ const canvas = document.querySelector('canvas.webgl')
 // Scene
 const scene = new THREE.Scene()
 
+// Texture
+const texture = new THREE.TextureLoader()
+const bakedShadow = texture.load("/textures/bakedShadow.jpg")
+const simpleShadow = texture.load("/textures/simpleShadow.jpg")
+
 /**
  * Lights
  */
@@ -33,7 +38,7 @@ gui.add(directionalLight.position, 'y').min(- 5).max(5).step(0.001)
 gui.add(directionalLight.position, 'z').min(- 5).max(5).step(0.001)
 scene.add(directionalLight)
 
-directionalLight.castShadow = true;
+// directionalLight.castShadow = true;
 
 directionalLight.shadow.mapSize.width = 1024;
 directionalLight.shadow.mapSize.height = 1024;
@@ -45,10 +50,43 @@ directionalLight.shadow.camera.near = 1;
 directionalLight.shadow.camera.far = 6;
 directionalLight.shadow.radius = 10;
 
+// Spotlight Light
+
+const spotLight = new THREE.SpotLight(0xffffff, 0.4, 10, Math.PI * 0.3, 1);
+// spotLight.castShadow = true;
+spotLight.shadow.mapSize.width = 1024;
+spotLight.shadow.mapSize.height = 1024;
+spotLight.shadow.camera.fov = 30;
+spotLight.shadow.camera.near = 1;
+spotLight.shadow.camera.far = 6;
+
+spotLight.position.set(0, 2, 2)
+scene.add(spotLight)
+scene.add(spotLight.target)
+
+// Point Light
+
+const pointLight = new THREE.PointLight(0xffffff, 0.3);
+pointLight.position.set(-1, 1, 0)
+// pointLight.castShadow = true;
+
+pointLight.shadow.mapSize.width = 1024;
+pointLight.shadow.mapSize.height = 1024;
+pointLight.shadow.camera.far = 5;
+pointLight.shadow.camera.near = 0.1;
+
+scene.add(pointLight)
+
 // Camera Helper for Near and Far
 
 const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-scene.add(directionalLightCameraHelper);
+// scene.add(directionalLightCameraHelper);
+
+const spotLightCameraHelper = new THREE.CameraHelper(spotLight.shadow.camera)
+// scene.add(spotLightCameraHelper);
+
+const pointLightCameraHelper = new THREE.CameraHelper(pointLight.shadow.camera);
+// scene.add(pointLightCameraHelper)
 
 /**
  * Materials
@@ -75,9 +113,23 @@ const plane = new THREE.Mesh(
 plane.rotation.x = - Math.PI * 0.5
 plane.position.y = - 0.5
 
-plane.receiveShadow = true; 
+plane.receiveShadow = true;
 
 scene.add(sphere, plane)
+
+const shadowPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 1.5),
+    new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        alphaMap: simpleShadow
+    })
+)
+
+shadowPlane.rotation.x = - Math.PI * 0.5;
+shadowPlane.position.y = plane.position.y + 0.01;
+
+scene.add(shadowPlane)
 
 /**
  * Sizes
@@ -87,8 +139,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -134,9 +185,18 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
+
+    // Animation
+
+    sphere.position.y = Math.abs(Math.sin(elapsedTime * 3));
+    sphere.position.x = Math.cos(elapsedTime) * 1.5;
+    sphere.position.z = Math.sin(elapsedTime) * 1.5;
+
+    shadowPlane.position.x = Math.cos(elapsedTime) * 1.5;
+    shadowPlane.position.z = Math.sin(elapsedTime) * 1.5;
+    shadowPlane.material.opacity = (1 - sphere.position.y) * 0.4
 
     // Update controls
     controls.update()
