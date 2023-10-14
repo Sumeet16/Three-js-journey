@@ -20,15 +20,56 @@ const scene = new THREE.Scene()
  * Textures
  */
 const textureLoader = new THREE.TextureLoader()
+const texture = textureLoader.load('textures/particles/2.png')
 
 /**
  * Test cube
  */
-const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial()
-)
-scene.add(cube)
+// const cube = new THREE.Mesh(
+//     new THREE.BoxGeometry(1, 1, 1),
+//     new THREE.MeshBasicMaterial()
+// )
+// scene.add(cube)
+
+// Particle Sphere
+// const particleGeometry = new THREE.SphereGeometry(1, 32, 32);
+
+// const particleMaterial = new THREE.PointsMaterial({
+//     size: 0.02,
+//     sizeAttenuation: true
+// })
+
+// const particle = new THREE.Points(particleGeometry, particleMaterial)
+// scene.add(particle)
+
+// Custom Particles
+const particleGeometry = new THREE.BufferGeometry();
+const count = 5000;
+
+const positions = new Float32Array(count * 3);
+const color = new Float32Array(count * 3);
+
+for (let i = 0; i < count * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 10;
+    color[i] = Math.random();
+}
+
+particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+particleGeometry.setAttribute('color', new THREE.BufferAttribute(color, 3))
+
+const particleMaterial = new THREE.PointsMaterial({
+    size: 0.1,
+    sizeAttenuation: true,
+    // map: texture,
+    transparent: true,
+    alphaMap: texture,
+})
+particleMaterial.depthWrite = false;
+particleMaterial.blending = THREE.AdditiveBlending;
+particleMaterial.vertexColors = true;
+
+const particle = new THREE.Points(particleGeometry, particleMaterial)
+scene.add(particle)
 
 /**
  * Sizes
@@ -83,6 +124,15 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
+
+    for (let i = 0; i < count; i++) {
+
+        const i3 = i * 3;
+        const x = particleGeometry.attributes.position.array[i3]
+        particleGeometry.attributes.position.array[i3 + 1] = Math.sin(elapsedTime + x)      
+    }
+
+    particleGeometry.attributes.position.needsUpdate = true
 
     // Update controls
     controls.update()
