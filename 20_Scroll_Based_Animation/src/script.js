@@ -14,6 +14,9 @@ const parameters = {
 
 gui
     .addColor(parameters, 'materialColor')
+    .onChange(() => {
+        material.color.set(parameters.materialColor)
+    })
 
 /**
  * Base
@@ -27,11 +30,48 @@ const scene = new THREE.Scene()
 /**
  * Test cube
  */
-const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: '#ff0000' })
+// const cube = new THREE.Mesh(
+//     new THREE.BoxGeometry(1, 1, 1),
+//     new THREE.MeshBasicMaterial({ color: '#ff0000' })
+// )
+
+// Texture
+const textureLoader = new THREE.TextureLoader();
+const texture = textureLoader.load("/textures/gradients/3.jpg")
+texture.magFilter = THREE.NearestFilter
+
+// Material
+const material = new THREE.MeshToonMaterial({
+    color: parameters.materialColor,
+    gradientMap: texture
+})
+
+const objectDistance = 4;
+const mesh1 = new THREE.Mesh(
+    new THREE.TorusGeometry(1, 0.4, 16, 60),
+    material
 )
-scene.add(cube)
+const mesh2 = new THREE.Mesh(
+    new THREE.ConeGeometry(1, 2, 32),
+    material
+)
+const mesh3 = new THREE.Mesh(
+    new THREE.TorusGeometry(0.8, 0.35, 100, 16),
+    material
+)
+
+mesh1.position.y = - objectDistance * 0;
+mesh2.position.y = - objectDistance * 1;
+mesh3.position.y = - objectDistance * 2;
+
+scene.add(mesh1, mesh2, mesh3)
+
+const sectionMeshes = [mesh1, mesh2, mesh3];
+
+// Light
+const directionalLight = new THREE.DirectionalLight('#ffffff', 1);
+directionalLight.position.set(1, 1, 0)
+scene.add(directionalLight)
 
 /**
  * Sizes
@@ -41,8 +81,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -68,7 +107,8 @@ scene.add(camera)
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
+    canvas: canvas,
+    alpha: true
 })
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace
 renderer.setSize(sizes.width, sizes.height)
@@ -79,9 +119,14 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
+
+    // Animate
+    for(const mesh of sectionMeshes){
+        mesh.rotation.x = elapsedTime * 0.2;
+        mesh.rotation.y = elapsedTime * 0.31;
+    }
 
     // Render
     renderer.render(scene, camera)
