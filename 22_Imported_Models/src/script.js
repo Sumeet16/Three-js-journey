@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
 THREE.ColorManagement.enabled = false
 
@@ -9,6 +11,44 @@ THREE.ColorManagement.enabled = false
  */
 // Debug
 const gui = new dat.GUI()
+
+/**
+ * Models 
+ */
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath("/draco/")
+
+const gltfLoader = new GLTFLoader()
+gltfLoader.setDRACOLoader(dracoLoader)
+
+let mixer = null;
+
+gltfLoader.load(
+    '/models/Fox/glTF/Fox.gltf',
+    (gltf) => {
+        // Optimised Way
+        // const children = [...gltf.scene.children]
+        // for (const child of children) {
+        //     scene.add(child)
+        // }
+
+        // Other Way
+        // while (gltf.scene.children.length) {
+        //     scene.add(gltf.scene.children[0])
+        // }
+
+        mixer = new THREE.AnimationMixer(gltf.scene);
+        const action = mixer.clipAction(gltf.animations[2]);
+
+        action.play()
+
+        // Best Way
+        gltf.scene.scale.set(0.025, 0.025, 0.025)
+        scene.add(gltf.scene)
+    }
+)
+
+
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -56,8 +96,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -102,11 +141,15 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 const clock = new THREE.Clock()
 let previousTime = 0
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
     const deltaTime = elapsedTime - previousTime
     previousTime = elapsedTime
+
+    // Update Mixer
+    if (mixer != null) {
+        mixer.update(deltaTime)
+    }
 
     // Update controls
     controls.update()
